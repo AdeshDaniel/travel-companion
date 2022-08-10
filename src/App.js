@@ -8,9 +8,14 @@ import List from "./components/List/List";
 
 const App = () => {
   const [places, setPlaces] = useState([]);
+  const [filteredPlaces, setfilteredPlaces] = useState([]);
+  const [childClicked, setChildClicked] = useState(null);
 
   const [coordinates, setCoordinates] = useState({});
-  const [bounds, setBounds] = useState(null);
+  const [bounds, setBounds] = useState({});
+  const [isLoading, setisLoading] = useState(false);
+  const [type, setType] = useState("resturant");
+  const [rating, setRating] = useState("");
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -21,20 +26,42 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    getPlacesData(bounds.sw, bounds.ne).then((data) => {
+    const filteredPlaces = places.filter((place) => place.rating > rating);
+    setfilteredPlaces(filteredPlaces);
+  }, [rating]);
+
+  useEffect(() => {
+    setisLoading(true);
+    getPlacesData(type, bounds.sw, bounds.ne).then((data) => {
+      setfilteredPlaces([]);
       setPlaces(data);
+      setisLoading(false);
     });
-  }, [coordinates, bounds]);
+  }, [type, coordinates, bounds]);
   return (
     <>
       <CssBaseline />
       <Header />
       <Grid container spacing={3} style={{ width: "100%" }}>
         <Grid item xs={12} md={4}>
-          <List />
+          <List
+            places={filteredPlaces.length ? filteredPlaces : places}
+            childClicked={childClicked}
+            isLoading={isLoading}
+            type={type}
+            setType={setType}
+            rating={rating}
+            setRating={setRating}
+          />
         </Grid>
         <Grid item xs={12} md={8}>
-          <Map setCoordinates={setCoordinates} setBounds={setBounds} />
+          <Map
+            setCoordinates={setCoordinates}
+            setBounds={setBounds}
+            coordinates={coordinates}
+            places={filteredPlaces.length ? filteredPlaces : places}
+            setChildClicked={setChildClicked}
+          />
         </Grid>
       </Grid>
     </>
